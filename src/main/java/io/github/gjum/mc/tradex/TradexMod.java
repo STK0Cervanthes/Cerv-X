@@ -172,7 +172,7 @@ public KeyMapping keyOpenGui = new KeyMapping("Open Tradex Search", InputConstan
 		var query = new SearchQuery(
 				"", "",
 				getPlayerPos(),
-				updatedAfter, false, 100, "closest");
+				updatedAfter, false, 500, "closest");
 		Exchanges.search(query)
 				.thenAccept(result -> {
 					mc.doRunTask(() -> {
