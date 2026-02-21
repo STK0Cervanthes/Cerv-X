@@ -61,6 +61,7 @@ public KeyMapping keyOpenGui = new KeyMapping("Open Tradex Search", InputConstan
 	private ChatHandler chatHandler = new ChatHandler(this);
 
 	public FavoritesManager favorites = new FavoritesManager();
+	public StockNotificationManager stockNotifications = new StockNotificationManager();
 
 	// store all clicked exchanges so the user can go back in chat and search for any previous exchange
 	public HashMap<Pos, ExchangeChest> exploredExchanges = new HashMap<>();
@@ -109,6 +110,7 @@ public KeyMapping keyOpenGui = new KeyMapping("Open Tradex Search", InputConstan
 			chatHandler = new ChatHandler(this);
 			exploredExchanges.clear();
 			lastSearchResult = null;
+			stockNotifications.reset();
 		} catch (Throwable err) {
 			err.printStackTrace();
 		}
@@ -171,6 +173,9 @@ public KeyMapping keyOpenGui = new KeyMapping("Open Tradex Search", InputConstan
 		Exchanges.upload(exchange);
 
 		exploredExchanges.computeIfAbsent(exchange.pos, e -> new ExchangeChest()).add(exchange);
+
+		// Check for stock transitions on favourite exchanges
+		stockNotifications.onExchangeUpdate(exchange);
 
 		var cmd = "/tradex search %s".formatted(SearchQuery.getSpecForRule(exchange.output));
 		//? if >=1.21.6 {
