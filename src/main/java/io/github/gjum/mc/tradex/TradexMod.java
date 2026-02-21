@@ -63,6 +63,11 @@ public KeyMapping keyOpenGui = new KeyMapping("Open Tradex Search", InputConstan
 	public FavoritesManager favorites = new FavoritesManager();
 	public StockNotificationManager stockNotifications = new StockNotificationManager();
 
+	/** Ticks between automatic favourite stock polls. 20 tps * 3600s = 1 hour. */
+	private static final int FAVOURITE_POLL_INTERVAL_TICKS = 20 * 3600;
+	private int ticksSinceLastPoll = 0;
+	private boolean favouritePollInProgress = false;
+
 	// store all clicked exchanges so the user can go back in chat and search for any previous exchange
 	public HashMap<Pos, ExchangeChest> exploredExchanges = new HashMap<>();
 	public @Nullable Exchanges.SearchResult lastSearchResult;
@@ -111,6 +116,8 @@ public KeyMapping keyOpenGui = new KeyMapping("Open Tradex Search", InputConstan
 			exploredExchanges.clear();
 			lastSearchResult = null;
 			stockNotifications.reset();
+			ticksSinceLastPoll = 0;
+			favouritePollInProgress = false;
 		} catch (Throwable err) {
 			err.printStackTrace();
 		}
@@ -146,9 +153,42 @@ public KeyMapping keyOpenGui = new KeyMapping("Open Tradex Search", InputConstan
 			if (keyOpenGui.consumeClick()) {
 				mc.setScreen(new SearchGui(null));
 			}
+			// Periodic poll for favourite exchange stock updates
+			if (mc.player != null && mc.level != null && favorites.hasFavourites()) {
+				ticksSinceLastPoll++;
+				if (ticksSinceLastPoll >= FAVOURITE_POLL_INTERVAL_TICKS && !favouritePollInProgress) {
+					ticksSinceLastPoll = 0;
+					pollFavouriteExchanges();
+				}
+			}
 		} catch (Throwable err) {
 			err.printStackTrace();
 		}
+	}
+
+	private void pollFavouriteExchanges() {
+		favouritePollInProgress = true;
+		final long updatedAfter = System.currentTimeMillis() - Utils.monthMs;
+		var query = new SearchQuery(
+				"", "",
+				getPlayerPos(),
+				updatedAfter, false, 100, "closest");
+		Exchanges.search(query)
+				.thenAccept(result -> {
+					mc.doRunTask(() -> {
+						if (result != null) {
+							for (var exchange : result.exchanges) {
+								stockNotifications.onExchangeUpdate(exchange);
+							}
+						}
+						favouritePollInProgress = false;
+					});
+				})
+				.exceptionally(e -> {
+					LOG.warn("Failed polling favourite exchanges", e);
+					favouritePollInProgress = false;
+					return null;
+				});
 	}
 
 	public void handleReceivedChat(Component chat) {

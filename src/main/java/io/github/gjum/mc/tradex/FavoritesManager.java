@@ -43,6 +43,10 @@ public class FavoritesManager {
 		return favoriteKeys.contains(keyOf(exchange));
 	}
 
+	public boolean hasFavourites() {
+		return !favoriteKeys.isEmpty();
+	}
+
 	public void setFavorite(@NotNull Exchange exchange, boolean favorite) {
 		if (favorite) {
 			favoriteKeys.add(keyOf(exchange));
