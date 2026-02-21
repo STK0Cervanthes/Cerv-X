@@ -85,6 +85,10 @@ public class SearchGui extends GuiRoot {
 		mc.doRunTask(() -> {
 			this.searchResult = result;
 			searchError = null;
+			// Check stock transitions for favourite exchanges from backend data
+			for (var exchange : result.exchanges) {
+				mod.stockNotifications.onExchangeUpdate(exchange);
+			}
 			rebuild();
 		});
 	}
