@@ -63,8 +63,8 @@ public KeyMapping keyOpenGui = new KeyMapping("Open Tradex Search", InputConstan
 	public FavoritesManager favorites = new FavoritesManager();
 	public StockNotificationManager stockNotifications = new StockNotificationManager();
 
-	/** Ticks between automatic favourite stock polls. 20 tps * 3600s = 1 hour. */
-	private static final int FAVOURITE_POLL_INTERVAL_TICKS = 20 * 3600;
+	/** Ticks between automatic favourite stock polls. 20 tps * 300s = 5 minutes. */
+	private static final int FAVOURITE_POLL_INTERVAL_TICKS = 20 * 300;
 	private int ticksSinceLastPoll = 0;
 	private boolean favouritePollInProgress = false;
 
